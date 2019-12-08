@@ -1,0 +1,6 @@
+{
+    "require": {
+        "drupol/phpermutations": "^1.3",
+        "sharkodlak/exception": "^1.0"
+    }
+}
