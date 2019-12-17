@@ -221,6 +221,10 @@ class Interpreter {
 		reset($this->source);
 	}
 
+	public function getSource(): array {
+		return $this->source;
+	}
+
 	public function valid($flags = 0): bool {
 		if ($this->done) {
 			return false;
