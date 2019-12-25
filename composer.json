@@ -1,7 +1,8 @@
 {
     "require": {
         "drupol/phpermutations": "^1.3",
-        "sharkodlak/exception": "^1.0"
+        "sharkodlak/exception": "^1.0",
+        "calc/arithmetic": "^1.0"
     },
     "autoload": {
 		"psr-4": {
