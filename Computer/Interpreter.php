@@ -11,6 +11,7 @@ class Interpreter {
 	private $done = false;
 	private $source;
 	private $relativeBase = 0;
+	private $counter = 0;
 
 	public function __construct(array $source) {
 		$this->source = $source;
@@ -114,19 +115,24 @@ class Interpreter {
 		return $this->relativeBase;
 	}
 
-	public function run(): array {
+	public function run(int $outputLength = PHP_INT_MAX): array {
 		$output = [];
 		do {
 			while ($this->valid(self::BREAK_ON_INPUT | self::BREAK_ON_OUTPUT)) {
 				$instruction = $this->current();
 				$this->next();
 				$instruction();
+				++$this->counter;
 			}
-			if (!$this->done && $continue = $this->isOutput()) {
+			if (!$this->done && $isOutput = $this->isOutput()) {
 				$output[] = $this->output();
 			}
-		} while (!$this->done && $continue);
+		} while (!$this->done && $isOutput && --$outputLength);
 		return $output;
+	}
+
+	public function isInput() {
+		return $this->getOpcode() == self::OP_INPUT;
 	}
 
 	public function isOutput() {
@@ -248,5 +254,9 @@ class Interpreter {
 
 	public function done() {
 		return $this->done;
+	}
+
+	public function getCounter(): int {
+		return $this->counter;
 	}
 }
