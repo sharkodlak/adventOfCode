@@ -3,7 +3,6 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-/*
 $file = [
 	'10 ORE => 10 A',
 	'1 ORE => 1 B',
@@ -46,6 +45,7 @@ $file = [
 	'1 VJHF, 6 MNCFX => 4 RFSQX',
 	'176 ORE => 6 VJHF',
 ];
+/*
 $file = [
 	'171 ORE => 8 CNZTR',
 	'7 ZLQW, 3 BMBT, 9 XCVML, 26 XMNCP, 1 WPTQ, 2 MZWV, 1 RJRHP => 4 PLWSL',
@@ -66,20 +66,26 @@ $file = [
 	'5 BHXH, 4 VRPVC => 5 LTCX',
 ];
 */
-$file = file(substr(__FILE__, 0, -4) . '/input.txt', FILE_IGNORE_NEW_LINES);
+//$file = file(substr(__FILE__, 0, -4) . '/input.txt', FILE_IGNORE_NEW_LINES);
 
 class Chemical {
 	private $name;
 	private $order;
 	private $quantity;
-	private $reactants;
+	private $reactants = [];
 
 	public function __construct(string $name, int $order, int $quantity, array $reactants = []) {
 		$this->name = $name;
 		$this->order = $order;
 		$this->quantity = $quantity;
 		uasort($reactants, 'self::cmpReactants');
-		$this->reactants = array_reverse($reactants);
+		foreach (array_reverse($reactants) as $reactant) {
+			$this->reactants[$reactant->getName()] = $reactant;
+		}
+	}
+
+	public function __toString(): string {
+		return implode(', ', $this->reactants) . " => {$this->quantity} {$this->name}";
 	}
 
 	private function cmpReactants(Reactant $a, Reactant $b): int {
@@ -101,6 +107,17 @@ class Chemical {
 	public function getReactants(): array {
 		return $this->reactants;
 	}
+
+	public function findReaction(array $sources): Chemical {
+		foreach ($this->reactants as $reactant) {
+			$sourceQuantity = $sources[$reactant->getName()] ?? 0;
+			$reactantAmount = $reactant->getAmount();
+			if ($reactantAmount > $sourceQuantity) {
+				return $reactant->findReaction($sources);
+			}
+		}
+		return $this;
+	}
 }
 
 class Reactant {
@@ -110,6 +127,10 @@ class Reactant {
 	public function __construct(int $amount, Chemical $chemical) {
 		$this->amount = $amount;
 		$this->chemical = $chemical;
+	}
+
+	public function __toString(): string {
+		return "-{$this->amount} {$this->chemical->getName()}";
 	}
 
 	public function getAmount(): int {
@@ -122,6 +143,10 @@ class Reactant {
 
 	public function getOrder(): int {
 		return $this->chemical->getOrder();
+	}
+
+	public function findReaction(array $sources): Chemical {
+		return $this->chemical->findReaction($sources);
 	}
 }
 
@@ -137,6 +162,75 @@ FUEL1
 A10   B1
 10  1
 ORE
+
+FUEL1
+28  1
+A10 |
+10  /
+ORE
+
+
+
+1 = 1 + 30(28)
+2 = 2 + 60(56)
+3 = 3 + 90(84)
+4 = 4 + 120(112)
+5 = 5 + 140(140)
+
+
+ORE(1)
+   >9= A(2)
+        >1-------------\
+        >3---\         |
+   >8= B(3)  |         |
+        >4---+= AB(1)  |
+        >5---\    >2---|--------\
+   >7= C(5)  |         |        |
+        >7---+= BC(1)  |        |
+                  >3---|--------+
+        >4-------------+=CA(1)  |
+                           >4---+= FUEL(1)
+
+-FUEL: 2520
+-AB:   5040
+-BC:   7560
+-CA:  10080
+-A:   10080 *3(>AB)
+-B:   37800 *4(>AB)
+-C:   10080 *5(>CA) *7(>BC)
+ORE:  57960 *2(>B) *3(>A)
+
+ORE(1)
+ >157= NZVS(5)
+          >29---------------------------\
+           >7---------------\           |
+ >165= DCFZ(6)              |           |
+           >3---------------+           |
+           >7---\           |           |
+ >179= PSHF(7)  |           |           |
+           >7---= XJWVT(2)  |           |
+                      >44---|-----------+
+          >10---------------+           |
+                            |           |
+           >8----\          |           |
+ >177= HKGWZ(5)  |          |           |
+            >5---|----------= KHKGT(8)  |
+                 |                 >5---+
+           >12---+                      |
+           >48---|----------------------+
+ >165= GPVTF(2)  |                      |
+            >1---= QDVJ(9)              |
+                       >1---------------+
+            >9--------------------------= FUEL(1)
+
+-FUEL:    1 * 2(GPVTF>QDVJ)
+NZVS:    29
+XJWVT:   44
+KHKGT:    5
+HKGWZ:   48
+QDVJ:     1
+GPVTF:    9
+
 */
 
 $reactions = [];
@@ -200,3 +294,32 @@ while (array_diff_key($sums, array_flip(['ORE']))) {
 }
 
 echo "Number of ORE to process is: {$sums['ORE']} .\n";
+
+
+$initialORE = 1000000000000;
+$sources = [
+	'ORE' => $initialORE,
+];
+$completeReaction = ['ORE' => null, 'FUEL' => null];
+$i = 0;
+while (isset($sources['ORE']) && $sources['ORE'] > 0) {
+	if (isset($sources['FUEL']) && !array_diff_key($sources, $completeReaction)) {
+		$completeReaction['ORE'] = $initialORE - $sources['ORE'];
+		$completeReaction['FUEL'] = $sources['FUEL'];
+		$sources['ORE'] = $initialORE % $completeReaction['ORE'];
+		$sources['FUEL'] *= floor($initialORE / $completeReaction['ORE']);
+	}
+	$chemical = $chemicals['FUEL']->findReaction($sources);
+	if ($chemical->getName() == 'ORE') {
+		break;
+	}
+	foreach ($chemical->getReactants() as $reactantName => $reactant) {
+		$sources[$reactantName] -= $reactant->getAmount();
+		if ($sources[$reactantName] == 0) {
+			unset($sources[$reactantName]);
+		}
+	}
+	$sources[$chemical->getName()] = $chemical->getQuantity() + ($sources[$chemical->getName()] ?? 0);
+}
+
+echo "Maximum FUEL created is {$sources['FUEL']} .\n";
