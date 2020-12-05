@@ -21,3 +21,13 @@ foreach ($lines as $bp => $line) {
 $max = max($boardingPasses);
 
 echo "Max seat ID: $max .\n";
+
+$min = $max - count($boardingPasses) - 1;
+for ($i = $max; $i > $min; --$i) {
+	if (!in_array($i, $boardingPasses)) {
+		$missing = $i;
+		break;
+	}
+}
+
+echo "Missing seat ID: $missing .\n";
