@@ -4,23 +4,28 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $fp = fopen(substr(__FILE__, 0, -4) . '/input.txt', 'r');
-$answers = [];
-$answersSum = 0;
-$newline = false;
+$group = [];
+$person = [];
+$anyoneSum = 0;
+$everyoneSum = 0;
 
-while (false !== ($c = fgetc($fp))) {
-	if (PHP_EOL === $c) {
-		if ($newline) {
-			$answersSum += array_sum($answers);
-			$answers = [];
+do {
+	$c = fgetc($fp);
+	if (PHP_EOL === $c || false === $c) {
+		if (empty($person)) {
+			$anyone = count($group) > 1 ? array_merge(...$group) : $group[0];
+			$everyone = count($group) > 1 ? array_intersect_key(...$group) : $group[0];
+			$anyoneSum += array_sum($anyone);
+			$everyoneSum += array_sum($everyone);
+			$group = [];
+		} else {
+			$group[] = $person;
+			$person = [];
 		}
-		$newline = true;
 	} else {
-		$answers[$c] = 1;
-		$newline = false;
+		$person[$c] = 1;
 	}
-}
+} while (false !== $c);
 
-$answersSum += array_sum($answers);
-
-echo "Answers sum: $answersSum .\n";
+echo "Anyone answers sum: $anyoneSum .\n";
+echo "Everyone answers sum: $everyoneSum .\n";
