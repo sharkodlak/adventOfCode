@@ -23,6 +23,7 @@ unset($lines);
 class Bag {
 	private $color;
 	private $bags = [];
+	private $bagsCount = 1;
 
 	public function __construct(string $color) {
 		$this->color = $color;
@@ -30,6 +31,7 @@ class Bag {
 
 	public function add(Bag $bag, int $amount) {
 		$this->bags[$bag->color] = [$bag, $amount];
+		$this->bagsCount += $amount * $bag->getBagsCount();
 	}
 
 	public function contains(string $color, int $amount) {
@@ -41,6 +43,10 @@ class Bag {
 			}
 		}
 		return false;
+	}
+
+	public function getBagsCount() {
+		return $this->bagsCount;
 	}
 }
 
@@ -66,3 +72,4 @@ foreach ($bags as $bag) {
 }
 
 echo "One shiny gold bag can be contained in $bagsCount bags.\n";
+printf("Shiny gold bag containes %d bags.\n", $bags['shiny gold']->getBagsCount() - 1);
