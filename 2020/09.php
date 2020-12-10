@@ -27,10 +27,26 @@ foreach ($lines as $i => $line) {
 		if (XmasCypher::canSum($numbers, $sum)) { // lze vypocitat ze 2 cisel v $numbers?
 			unset($numbers[$i - $preambleLength]);
 		} else {
+			$incorrectNumber = $sum;
 			break;
 		}
 	}
 	$numbers[] = $sum;
 }
 
-echo "First incorrect value $sum .\n";
+echo "First incorrect value $incorrectNumber .\n";
+
+for ($first = 0; $first < count($lines); ++$first) {
+	$contiguous = [];
+	$i = $first;
+	while (array_sum($contiguous) < $incorrectNumber) {
+		$contiguous[$i] = (int) $lines[$i++];
+	}
+	if (count($contiguous) > 1 && array_sum($contiguous) == $incorrectNumber) {
+		break;
+	}
+}
+
+$min = min($contiguous);
+$max = max($contiguous);
+printf("Encryption weakness %d + %d = %s .\n", $min, $max, $min + $max);
