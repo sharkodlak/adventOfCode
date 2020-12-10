@@ -3,7 +3,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$instructions = file(substr(__FILE__, 0, -4) . '/example.txt');
+$instructions = file(substr(__FILE__, 0, -4) . '/input.txt');
 foreach ($instructions as &$instruction) {
 	[$opcode, $arg] = explode(' ', $instruction);
 	$arg = (int) $arg;
@@ -35,10 +35,29 @@ class Computer {
 			[$opcode, $arg] = $instructions[$this->pointer];
 			[$this->pointer, $this->acc] = $this->instructionSet[$opcode]($this->pointer, $this->acc, $arg);
 		}
+		return !isset($this->visited[$this->pointer]);
+	}
+
+	public function getAcc() {
 		return $this->acc;
 	}
 }
 
 $computer = new Computer($instructionSet);
-$acc = $computer->execute($instructions);
+$computer->execute($instructions);
+$acc = $computer->getAcc();
 echo "Accumulator value $acc .\n";
+
+$modify = ['jmp' => 'nop', 'nop' => 'jmp'];
+foreach ($instructions as $i => $instruction) {
+	if (in_array($instruction[0], array_keys($modify))) {
+		$instructionsCopy = $instructions;
+		$opcode = $instructionsCopy[$i][0];
+		$instructionsCopy[$i][0] = $modify[$opcode];
+		$success = $computer->execute($instructionsCopy);
+		if ($success) {
+			$acc = $computer->getAcc();
+			echo "Accumulator value $acc .\n";
+		}
+	}
+}
