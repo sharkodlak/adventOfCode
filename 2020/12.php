@@ -123,10 +123,12 @@ class Heading {
 
 class Navigator {
 	private $heading;
-	private $x = 0, $y = 0;
+	private $x, $y;
 
-	public function __construct(Heading $heading) {
+	public function __construct(Heading $heading, int $x = 0, int $y = 0) {
 		$this->heading = $heading;
+		$this->x = $x;
+		$this->y = $y;
 	}
 
 	public function step(string $action, int $amount): self {
@@ -142,14 +144,75 @@ class Navigator {
 	}
 }
 
+class Waypoint {
+	private $wpX, $wpY, $x, $y;
+	private $actions = [];
+
+	public function __construct(int $wpX, int $wpY, int $x = 0, int $y = 0) {
+		$this->wpX = $wpX;
+		$this->wpY = $wpY;
+		$this->x = $x;
+		$this->y = $y;
+		$this->setActions();
+	}
+
+	private function setActions() {
+		$this->actions = [
+			'E' => function(int $amount, $wpX, $wpY) {return [$wpX + $amount, $wpY];},
+			'S' => fn(int $amount, $wpX, $wpY) => [$wpX, $wpY - $amount],
+			'W' => fn(int $amount, $wpX, $wpY) => [$wpX - $amount, $wpY],
+			'N' => fn(int $amount, $wpX, $wpY) => [$wpX, $wpY + $amount],
+			'L' => function(int $amount, $wpX, $wpY) {
+				$turns = $amount / 90;
+				for (; $turns; --$turns) {
+					$tmp = $wpX;
+					$wpX = -$wpY;
+					$wpY = $tmp;
+				}
+				return [$wpX, $wpY];
+			},
+			'R' => function(int $amount, $wpX, $wpY) {
+				$turns = $amount / 90;
+				for (; $turns; --$turns) {
+					$tmp = $wpX;
+					$wpX = $wpY;
+					$wpY = -$tmp;
+				}
+				return [$wpX, $wpY];
+			},
+		];
+	}
+
+	public function step(string $action, int $amount): self {
+		if ($action == 'F') {
+			$this->x += $amount * $this->wpX;
+			$this->y += $amount * $this->wpY;
+		} else {
+			[$this->wpX, $this->wpY] = $this->actions[$action]($amount, $this->wpX, $this->wpY);
+		}
+		printf("[%d, %d] -> [%d, %d]\n", $this->x, $this->y, $this->wpX, $this->wpY);
+		return $this;
+	}
+
+	public function getDistance(): int {
+		return abs($this->x) + abs($this->y);
+	}
+}
+
 $delta = new Delta;
 $east = new Heading($delta, 'E');
 $navigator = new Navigator($east);
+
+$east = new Heading($delta, 'E');
+$waypoint = new Waypoint(10, 1);
+
 
 foreach ($lines as $line) {
 	$action = $line[0];
 	$value = (int) substr($line, 1);
 	$navigator->step($action, $value);
+	$waypoint->step($action, $value);
 }
 
 printf("Manhattan distance: %d .\n", $navigator->getDistance());
+printf("Moving waypoint manhattan distance: %d .\n", $waypoint->getDistance());
