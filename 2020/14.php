@@ -4,8 +4,9 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $lines = file(substr(__FILE__, 0, -4) . '/input.txt');
+$memFirst = [];
+$memSecond = [];
 
-$mem = [];
 foreach ($lines as $line) {
 	if (preg_match('~^mask = ([X01]+)$~', $line, $matches)) {
 		$mask = $matches[1];
@@ -16,14 +17,30 @@ foreach ($lines as $line) {
 			$chr = $mask[$i];
 			$and <<= 1;
 			$or <<= 1;
+			$float <<= 1;
 			$and |= intval($chr !== '0');
 			$or |= intval($chr === '1');
+			$float |= intval($chr === 'X');
+		}
+		$floatAddresses = [0];
+		for ($i = 0; $i < 36; ++$i) {
+			if ($float >> $i & 1) {
+				foreach ($floatAddresses as $floatAddress) {
+					$floatAddresses[] = $floatAddress | 1 << $i;
+				}
+			}
 		}
 	} else if (preg_match('~^mem\[(\d+)\] = (\d+)$~', $line, $matches)) {
 		$address = (int) $matches[1];
 		$value = (int) $matches[2];
-		$mem[$address] = $value & $and | $or;
+		$memFirst[$address] = $value & $and | $or;
+		$address |= $or;
+		$address &= ~$float;
+		foreach ($floatAddresses as $floatAddress) {
+			$memSecond[$address | $floatAddress] = $value;
+		}
 	}
 }
 
-printf("Memory sum %d .\n", array_sum($mem));
+printf("Docking v.1 memory sum: %d .\n", array_sum($memFirst));
+printf("Docking v.2 memory sum: %d .\n", array_sum($memSecond));
