@@ -11,20 +11,13 @@ foreach ($lines as $line) {
 		$mask = $matches[1];
 		$and = 0;
 		$or = 0;
+		$float = 0;
 		for ($i = 0; $i < strlen($mask); ++$i) {
 			$chr = $mask[$i];
 			$and <<= 1;
 			$or <<= 1;
-			if ($chr === '0') {
-				$and |= 0;
-			} else {
-				$and |= 1;
-			}
-			if ($chr === '1') {
-				$or |= 1;
-			} else {
-				$or |= 0;
-			}
+			$and |= intval($chr !== '0');
+			$or |= intval($chr === '1');
 		}
 	} else if (preg_match('~^mem\[(\d+)\] = (\d+)$~', $line, $matches)) {
 		$address = (int) $matches[1];
