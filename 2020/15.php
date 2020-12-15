@@ -4,32 +4,31 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $startingNumbers = [18,11,9,0,5,1];
-$spokenNumbers = [];
-$store = [];
-$fp = fopen('php://stdin', 'r');
+//$startingNumbers = [0,3,6];
+$spokenNumbers = new SplFixedArray(30_000_000);
+$storeNumber = 0;
+$storeTime = 0;
 
-for ($i = 1; $i <= 2020; ++$i) {
-
-	if (isset($startingNumbers[$i - 1])) {
-		$spokenNumber = $startingNumbers[$i - 1];
-	} else {
-		//printf("spoken: %d, %d - [t: %d] => ", $spokenNumber, $i - 1, $spokenNumbers[$spokenNumber]);
-		if (isset($spokenNumbers[$spokenNumber])) {
-			$spokenNumber = $i - 1 - $spokenNumbers[$spokenNumber];
-		} else {
-			$spokenNumber = 0;
-		}
-
-	}
-	$spokenNumbers = $store + $spokenNumbers;
-	$store = [$spokenNumber => $i];
-	/*
-	echo "$spokenNumber\n";
-	if (fgets($fp) !== PHP_EOL) {
-		var_dump($spokenNumbers, $store);
-	}
-	*/
+foreach ($startingNumbers as $i => $startingNumber) {
+	$spokenNumber = $startingNumber;
+	$spokenNumbers[$storeNumber] = $storeTime;
+	$storeNumber = $spokenNumber;
+	$storeTime = $i + 1;
 }
 
+for ($i = count($startingNumbers); $i < 30_000_000; ++$i) {
+	if (isset($spokenNumbers[$spokenNumber])) {
+		$spokenNumber = $i - $spokenNumbers[$spokenNumber];
+	} else {
+		$spokenNumber = 0;
+	}
 
-printf("The 2020th spoken number is: %d .\n", $spokenNumber);
+	$spokenNumbers[$storeNumber] = $storeTime;
+	$storeNumber = $spokenNumber;
+	$storeTime = $i + 1;
+	if ($storeTime == 2020) {
+		printf("The %dth spoken number is: %d .\n", $storeTime, $spokenNumber);
+	}
+}
+
+printf("The %dth spoken number is: %d .\n", $i, $spokenNumber);
