@@ -8,30 +8,40 @@ class Rules {
 		false => [3],
 		true => [2, 3],
 	];
-	private static $relatives = [
-		[-1, -1, -1], [-1, -1, 0], [-1, -1, 1],
-		[-1,  0, -1], [-1,  0, 0], [-1,  0, 1],
-		[-1,  1, -1], [-1,  1, 0], [-1,  1, 1],
+	private static $delta = [-1, 0, 1];
+	private $relatives;
 
-		[ 0, -1, -1], [ 0, -1, 0], [ 0, -1, 1],
-		[ 0,  0, -1],        14 => [ 0,  0, 1],
-		[ 0,  1, -1], [ 0,  1, 0], [ 0,  1, 1],
-
-		[ 1, -1, -1], [ 1, -1, 0], [ 1, -1, 1],
-		[ 1,  0, -1], [ 1,  0, 0], [ 1,  0, 1],
-		[ 1,  1, -1], [ 1,  1, 0], [ 1,  1, 1],
-	];
+	public function __construct(int $numberOfCoordinates) {
+		$relatives = [];
+		for (; $numberOfCoordinates; --$numberOfCoordinates) {
+			$previousDimensionRelatives = $relatives;
+			$relatives = [];
+			foreach (self::$delta as $i) {
+				if (empty($previousDimensionRelatives)) {
+					$relatives[] = $i;
+				} else {
+					foreach ($previousDimensionRelatives as $pdr) {
+						$pdr = (array) $pdr;
+						$relatives[] = [$i, ...$pdr];
+					}
+				}
+			}
+		}
+		$middle = floor(count($relatives) / 2);
+		unset($relatives[$middle]);
+		$this->relatives = $relatives;
+	}
 
 	public function willBeActive(bool $isActive, int $activeNeighbours): bool {
 		return in_array($activeNeighbours, self::$rules[$isActive]);
 	}
 
-	public function getNeighbourRelativeCoordinates() {
-		return self::$relatives;
+	public function getNeighbourRelativeCoordinates(): array {
+		return $this->relatives;
 	}
 }
 
-class Cube {
+class Cell {
 	private $rules;
 
 	public function __construct(Rules $rules) {
@@ -48,13 +58,13 @@ class Cube {
 }
 
 class Space {
-	private $cube;
+	private $cell;
 	private $rules;
 	private $space = [];
 
-	public function __construct(Rules $rules, Cube $cube) {
+	public function __construct(Rules $rules, Cell $cell) {
 		$this->rules = $rules;
-		$this->cube = $cube;
+		$this->cell = $cell;
 	}
 
 	public function activate(int $x, int $y, int $z) {
@@ -70,8 +80,8 @@ class Space {
 		$neighboursCount = [];
 		foreach ($this->space as $z => $plane) {
 			foreach ($plane as $y => $row) {
-				foreach ($row as $x => $cube) {
-					foreach ($this->cube->getNeighbourCoordinates($x, $y, $z) as [$nz, $ny, $nx]) {
+				foreach ($row as $x => $cell) {
+					foreach ($this->cell->getNeighbourCoordinates($x, $y, $z) as [$nz, $ny, $nx]) {
 						if (isset($neighboursCount[$nz][$ny][$nx])) {
 							++$neighboursCount[$nz][$ny][$nx];
 						} else {
@@ -101,23 +111,24 @@ class Space {
 		}
 	}
 
-	public function countActiveCubes(): int {
-		$activeCubes = 0;
+	public function countActiveCells(): int {
+		$activeCells = 0;
 		foreach ($this->space as $z => $plane) {
 			foreach ($plane as $y => $row) {
-				$activeCubes += array_sum($row);
+				$activeCells += array_sum($row);
 			}
 		}
-		return $activeCubes;
+		return $activeCells;
 	}
 }
 
 $lines = file(substr(__FILE__, 0, -4) . '/input.txt');
 $minus = -floor(count($lines) / 2);
 $x = $y = $z = 0;
-$rules = new Rules;
-$cube = new Cube($rules);
-$space = new Space($rules, $cube);
+$rules3D = new Rules(3);
+//$rules4D = new Rules(4);
+$cell = new Cell($rules3D);
+$space = new Space($rules3D, $cell);
 
 foreach ($lines as $y => $line) {
 	for ($x = 0; $x < strlen($line); ++$x) {
@@ -131,4 +142,4 @@ for ($i = 0; $i < 6; ++$i) {
 	$space->step();
 }
 
-printf("Number of active cubes: %d .\n", $space->countActiveCubes());
+printf("Number of active cubes: %d .\n", $space->countActiveCells());
