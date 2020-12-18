@@ -69,8 +69,13 @@ class Space {
 		$this->cell = $cell;
 	}
 
-	public function activate(int $x, int $y, int $z) {
-		$this->space[$z][$y][$x] = 1;
+	public function activate(int ...$dimensions) {
+		$dimensions = array_reverse($dimensions);
+		$narrowSpace = &$this->space;
+		foreach ($dimensions as $d) {
+			$narrowSpace = &$narrowSpace[$d];
+		}
+		$narrowSpace = 1;
 	}
 
 	public function step() {
