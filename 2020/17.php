@@ -48,12 +48,14 @@ class Cell {
 		$this->rules = $rules;
 	}
 
-	public function getNeighbourCoordinates($x, $y, $z) {
+	public function getNeighbourCoordinates(int ...$dimensions) {
+		$dimensions = array_reverse($dimensions);
 		$neighbourCoordinates = [];
-		foreach ($this->rules->getNeighbourRelativeCoordinates() as $n => [$dz, $dy, $dx]) {
-			$neighbourCoordinates[$n] = [$z + $dz, $y + $dy, $x + $dx];
+		foreach ($this->rules->getNeighbourRelativeCoordinates() as $n => $relativeDimensions) {
+			$neighbourDimensions = array_map(fn($d, $r) => $d + $r, $dimensions, $relativeDimensions);
+			$neighbourCoordinates[$n] = $neighbourDimensions;
 		}
-		return $neighbourCoordinates;
+		return array_reverse($neighbourCoordinates);
 	}
 }
 
