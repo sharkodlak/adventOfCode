@@ -3,17 +3,57 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+class Dimension {
+	public static function getCoordinates($space, int $dimensions): array {
+		$coordinates = [];
+		--$dimensions;
+		foreach ($space as $c => $inner) {
+			if ($dimensions > 0) {
+				foreach (self::getCoordinates($inner, $dimensions) as $innerCoordinates) {
+					$coordinates[] = [$c, ...$innerCoordinates];
+				}
+			} else {
+				$coordinates[] = [$c];
+			}
+		}
+		return $coordinates;
+	}
+}
+
+$s = [
+	-1 => [
+		-1 => [-1 => -11, 0 => -12, 1 => -13],
+		 0 => [-1 => -14, 0 => -15, 1 => -16],
+		 1 => [-1 => -17, 0 => -18, 1 => -19],
+	],
+	 0 => [
+		-1 => [-1 => 1, 0 => 2, 1 => 3],
+		 0 => [-1 => 4, 0 => 5, 1 => 6],
+		 1 => [-1 => 7, 0 => 8, 1 => 9],
+	],
+	 1 => [
+		-1 => [-1 => 11, 0 => 12, 1 => 13],
+		 0 => [-1 => 14, 0 => 15, 1 => 16],
+		 1 => [-1 => 17, 0 => 18, 1 => 19],
+	],
+];
+$x = Dimension::getCoordinates($s, 3);
+var_dump($x);
+exit;
+
 class Rules {
 	private static $rules = [
 		false => [3],
 		true => [2, 3],
 	];
 	private static $delta = [-1, 0, 1];
+	private $numberOfDimensions;
 	private $relatives;
 
-	public function __construct(int $numberOfCoordinates) {
+	public function __construct(int $numberOfDimensions) {
+		$this->numberOfDimensions = $numberOfDimensions;
 		$relatives = [];
-		for (; $numberOfCoordinates; --$numberOfCoordinates) {
+		for (; $numberOfDimensions; --$numberOfDimensions) {
 			$previousDimensionRelatives = $relatives;
 			$relatives = [];
 			foreach (self::$delta as $i) {
@@ -38,6 +78,10 @@ class Rules {
 
 	public function getNeighbourRelativeCoordinates(): array {
 		return $this->relatives;
+	}
+
+	public function getNumberOfDimensions(): int {
+		return $this->numberOfDimensions;
 	}
 }
 
@@ -84,15 +128,18 @@ class Space {
 	}
 
 	public function getNeighboursCount(): array {
+		$numberOfDimensions = $this->rules->getNumberOfDimensions();
 		$neighboursCount = [];
-		foreach ($this->space as $z => $plane) {
+		$narrowSpace = &$this->space;
+		for (; $numberOfDimensions; --$numberOfDimensions) {
+
 			foreach ($plane as $y => $row) {
 				foreach ($row as $x => $cell) {
-					foreach ($this->cell->getNeighbourCoordinates($x, $y, $z) as [$nz, $ny, $nx]) {
-						if (isset($neighboursCount[$nz][$ny][$nx])) {
-							++$neighboursCount[$nz][$ny][$nx];
+					foreach ($this->cell->getNeighbourCoordinates($x, $y, $z) as $neighbourDimensions) {
+						if (isset($neighboursCount[$neighbourDimensions[0]][$neighbourDimensions[1]][$neighbourDimensions[2]])) {
+							++$neighboursCount[$neighbourDimensions[0]][$neighbourDimensions[1]][$neighbourDimensions[2]];
 						} else {
-							$neighboursCount[$nz][$ny][$nx] = 1;
+							$neighboursCount[$neighbourDimensions[0]][$neighbourDimensions[1]][$neighbourDimensions[2]] = 1;
 						}
 					}
 				}
