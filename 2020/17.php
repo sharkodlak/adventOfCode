@@ -20,38 +20,23 @@ class Dimension {
 	}
 }
 
-$s = [
-	-1 => [
-		-1 => [-1 => -11, 0 => -12, 1 => -13],
-		 0 => [-1 => -14, 0 => -15, 1 => -16],
-		 1 => [-1 => -17, 0 => -18, 1 => -19],
-	],
-	 0 => [
-		-1 => [-1 => 1, 0 => 2, 1 => 3],
-		 0 => [-1 => 4, 0 => 5, 1 => 6],
-		 1 => [-1 => 7, 0 => 8, 1 => 9],
-	],
-	 1 => [
-		-1 => [-1 => 11, 0 => 12, 1 => 13],
-		 0 => [-1 => 14, 0 => 15, 1 => 16],
-		 1 => [-1 => 17, 0 => 18, 1 => 19],
-	],
-];
-$x = Dimension::getCoordinates($s, 3);
-var_dump($x);
-exit;
-
 class Rules {
 	private static $rules = [
 		false => [3],
 		true => [2, 3],
 	];
 	private static $delta = [-1, 0, 1];
+	private $dimension;
 	private $numberOfDimensions;
 	private $relatives;
 
-	public function __construct(int $numberOfDimensions) {
+	public function __construct(int $numberOfDimensions, Dimension $dimension) {
 		$this->numberOfDimensions = $numberOfDimensions;
+		$this->dimension = $dimension;
+		$this->setRelatives($numberOfDimensions);
+	}
+
+	private function setRelatives(int $numberOfDimensions): void {
 		$relatives = [];
 		for (; $numberOfDimensions; --$numberOfDimensions) {
 			$previousDimensionRelatives = $relatives;
@@ -82,6 +67,10 @@ class Rules {
 
 	public function getNumberOfDimensions(): int {
 		return $this->numberOfDimensions;
+	}
+
+	public function getCoordinates(array $space): array {
+		return $this->dimension->getCoordinates($space, $this->numberOfDimensions);
 	}
 }
 
@@ -131,18 +120,18 @@ class Space {
 		$numberOfDimensions = $this->rules->getNumberOfDimensions();
 		$neighboursCount = [];
 		$narrowSpace = &$this->space;
-		for (; $numberOfDimensions; --$numberOfDimensions) {
-
-			foreach ($plane as $y => $row) {
-				foreach ($row as $x => $cell) {
-					foreach ($this->cell->getNeighbourCoordinates($x, $y, $z) as $neighbourDimensions) {
-						if (isset($neighboursCount[$neighbourDimensions[0]][$neighbourDimensions[1]][$neighbourDimensions[2]])) {
-							++$neighboursCount[$neighbourDimensions[0]][$neighbourDimensions[1]][$neighbourDimensions[2]];
-						} else {
-							$neighboursCount[$neighbourDimensions[0]][$neighbourDimensions[1]][$neighbourDimensions[2]] = 1;
-						}
-					}
+		$activeCoordinates = $this->rules->getCoordinates($this->space);
+		foreach ($activeCoordinates as $coordinates) {
+			$coordinates = array_reverse($coordinates);
+			foreach ($this->cell->getNeighbourCoordinates(...$coordinates) as $neighbourCoordinates) {
+				$neighboursCountPointer = &$neighboursCount;
+				foreach ($neighbourCoordinates as $d) {
+					$neighboursCountPointer = &$neighboursCountPointer[$d];
 				}
+				if (!isset($neighboursCountPointer)) {
+					$neighboursCountPointer = 0;
+				}
+				++$neighboursCountPointer;
 			}
 		}
 		return $neighboursCount;
@@ -179,8 +168,9 @@ class Space {
 $lines = file(substr(__FILE__, 0, -4) . '/input.txt');
 $minus = -floor(count($lines) / 2);
 $x = $y = $z = 0;
-$rules3D = new Rules(3);
-//$rules4D = new Rules(4);
+$dimension = new Dimension;
+$rules3D = new Rules(3, $dimension);
+//$rules4D = new Rules(4, $dimension);
 $cell = new Cell($rules3D);
 $space = new Space($rules3D, $cell);
 
