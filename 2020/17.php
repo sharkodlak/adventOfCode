@@ -90,6 +90,23 @@ class Cell {
 		}
 		return array_reverse($neighbourCoordinates);
 	}
+
+	public function getCell(array $space, array $coordinates) {
+		foreach ($coordinates as $d) {
+			if (!isset($space[$d])) {
+				return null;
+			}
+			$space = &$space[$d];
+		}
+		return $space;
+	}
+
+	public function &getCellReference(array &$space, array $coordinates) {
+		foreach ($coordinates as $d) {
+			$space = &$space[$d];
+		}
+		return $space;
+	}
 }
 
 class Space {
@@ -124,10 +141,15 @@ class Space {
 		foreach ($activeCoordinates as $coordinates) {
 			$coordinates = array_reverse($coordinates);
 			foreach ($this->cell->getNeighbourCoordinates(...$coordinates) as $neighbourCoordinates) {
+				$neighboursCountPointer = &$this->cell->getCellReference($neighboursCount, $neighbourCoordinates);
+				/*
+				if ($neighbourCoordinates == [0, 0, 0]) var_dump($neighboursCountPointer);
 				$neighboursCountPointer = &$neighboursCount;
 				foreach ($neighbourCoordinates as $d) {
 					$neighboursCountPointer = &$neighboursCountPointer[$d];
 				}
+				if ($neighbourCoordinates == [0, 0, 0]) var_dump($neighboursCountPointer);
+				*/
 				if (!isset($neighboursCountPointer)) {
 					$neighboursCountPointer = 0;
 				}
@@ -137,19 +159,17 @@ class Space {
 		return $neighboursCount;
 	}
 
-	public function modifySpace(array $neighboursCount) {
+	public function modifySpace(array $allNeighboursCount) {
 		$spaceTurn = $this->space;
 		$this->space = [];
-		foreach ($neighboursCount as $z => $plane) {
-			foreach ($plane as $y => $row) {
-				foreach ($row as $x => $activeNeighboursCount) {
-					$isActive = isset($spaceTurn[$z][$y][$x]);
-					$willBeActive = $this->rules->willBeActive($isActive, $activeNeighboursCount);
-					if ($willBeActive) {
-						//echo "activate: $z, $y, $x\n";
-						$this->activate($x, $y, $z);
-					}
-				}
+		$neighbourCoordinates = $this->rules->getCoordinates($allNeighboursCount);
+		foreach ($neighbourCoordinates as $coordinates) {
+			$reverseCoordinates = array_reverse($coordinates);
+			$activeNeighboursCount = $this->cell->getCell($allNeighboursCount, $coordinates);
+			$isActive = !empty($this->cell->getCell($spaceTurn, $coordinates));
+			$willBeActive = $this->rules->willBeActive($isActive, $activeNeighboursCount);
+			if ($willBeActive) {
+				$this->activate(...$reverseCoordinates);
 			}
 		}
 	}
