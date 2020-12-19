@@ -107,6 +107,7 @@ class Space {
 	private $cell;
 	private $rules;
 	private $space = [];
+	private $activeCellCount = 0;
 
 	public function __construct(Rules $rules, Cell $cell) {
 		$this->rules = $rules;
@@ -120,6 +121,7 @@ class Space {
 			$narrowSpace = &$narrowSpace[$d];
 		}
 		$narrowSpace = 1;
+		++$this->activeCellCount;
 	}
 
 	public function step() {
@@ -156,6 +158,7 @@ class Space {
 	public function modifySpace(array $allNeighboursCount) {
 		$spaceTurn = $this->space;
 		$this->space = [];
+		$this->activeCellCount = 0;
 		$neighbourCoordinates = $this->rules->getCoordinates($allNeighboursCount);
 		foreach ($neighbourCoordinates as $coordinates) {
 			$reverseCoordinates = array_reverse($coordinates);
@@ -169,35 +172,33 @@ class Space {
 	}
 
 	public function countActiveCells(): int {
-		$activeCells = 0;
-		foreach ($this->space as $z => $plane) {
-			foreach ($plane as $y => $row) {
-				$activeCells += array_sum($row);
-			}
-		}
-		return $activeCells;
+		return $this->activeCellCount;
 	}
 }
 
 $lines = file(substr(__FILE__, 0, -4) . '/input.txt');
 $minus = -floor(count($lines) / 2);
-$x = $y = $z = 0;
+$x = $y = $z = $w = 0;
 $dimension = new Dimension;
 $rules3D = new Rules(3, $dimension);
 $rules4D = new Rules(4, $dimension);
 $cell = new Cell();
-$space = new Space($rules3D, $cell);
+$space3D = new Space($rules3D, $cell);
+$space4D = new Space($rules4D, $cell);
 
 foreach ($lines as $y => $line) {
 	for ($x = 0; $x < strlen($line); ++$x) {
 		if ($line[$x] == '#') {
-			$space->activate($x, $y, $z);
+			$space3D->activate($x, $y, $z);
+			$space4D->activate($x, $y, $z, $w);
 		}
 	}
 }
 
 for ($i = 0; $i < 6; ++$i) {
-	$space->step();
+	$space3D->step();
+	$space4D->step();
 }
 
-printf("Number of active cubes: %d .\n", $space->countActiveCells());
+printf("Number of active cubes: %d .\n", $space3D->countActiveCells());
+printf("Number of active hypercubes: %d .\n", $space4D->countActiveCells());
