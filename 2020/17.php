@@ -75,16 +75,10 @@ class Rules {
 }
 
 class Cell {
-	private $rules;
-
-	public function __construct(Rules $rules) {
-		$this->rules = $rules;
-	}
-
-	public function getNeighbourCoordinates(int ...$dimensions) {
+	public function getNeighbourCoordinates(Rules $rules, int ...$dimensions) {
 		$dimensions = array_reverse($dimensions);
 		$neighbourCoordinates = [];
-		foreach ($this->rules->getNeighbourRelativeCoordinates() as $n => $relativeDimensions) {
+		foreach ($rules->getNeighbourRelativeCoordinates() as $n => $relativeDimensions) {
 			$neighbourDimensions = array_map(fn($d, $r) => $d + $r, $dimensions, $relativeDimensions);
 			$neighbourCoordinates[$n] = $neighbourDimensions;
 		}
@@ -140,7 +134,7 @@ class Space {
 		$activeCoordinates = $this->rules->getCoordinates($this->space);
 		foreach ($activeCoordinates as $coordinates) {
 			$coordinates = array_reverse($coordinates);
-			foreach ($this->cell->getNeighbourCoordinates(...$coordinates) as $neighbourCoordinates) {
+			foreach ($this->cell->getNeighbourCoordinates($this->rules, ...$coordinates) as $neighbourCoordinates) {
 				$neighboursCountPointer = &$this->cell->getCellReference($neighboursCount, $neighbourCoordinates);
 				/*
 				if ($neighbourCoordinates == [0, 0, 0]) var_dump($neighboursCountPointer);
@@ -190,8 +184,8 @@ $minus = -floor(count($lines) / 2);
 $x = $y = $z = 0;
 $dimension = new Dimension;
 $rules3D = new Rules(3, $dimension);
-//$rules4D = new Rules(4, $dimension);
-$cell = new Cell($rules3D);
+$rules4D = new Rules(4, $dimension);
+$cell = new Cell();
 $space = new Space($rules3D, $cell);
 
 foreach ($lines as $y => $line) {
