@@ -65,17 +65,31 @@ foreach ($lines as $line) {
 	}
 }
 
+$winningBoard = null;
+$loosingBoard = null;
+$winDrawn = null;
+
 foreach ($drawnNumbers as $drawn) {
 	//echo "number drawn: $drawn\n";
-	foreach ($boards as $board) {
+	foreach ($boards as $b => $board) {
 		$board->drawn($drawn);
 
 		if ($board->won()) {
-			$score = $board->getScore();
-			break(2);
+			unset($boards[$b]);
+
+			if ($winningBoard === null) {
+				$winningBoard = $board;
+				$winDrawn = $drawn;
+			}
+
+			if (count($boards) === 0) {
+				$loosingBoard = $board;
+				break(2);
+			}
 		}
 	}
 }
 
-printf("Bingo final score is %d . Score is %d multiplied by %d last number.\n", $score * $drawn, $score, $drawn);
+printf("Bingo final score is %d . Score is %d multiplied by %d last number.\n", $winningBoard->getScore() * $winDrawn, $winningBoard->getScore(), $winDrawn);
+printf("Loosing board final score is %d . Score is %d multiplied by %d last number.\n", $loosingBoard->getScore() * $drawn, $loosingBoard->getScore(), $drawn);
 
