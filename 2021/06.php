@@ -18,10 +18,18 @@ foreach ($fishesInput as $fish) {
 
 for ($i = 0; $i < 80; ++$i) {
 	$currentGroup = array_shift($fishGroups);
-	echo "$currentGroup\n";
+	//echo "$currentGroup\n";
 	$fishGroups[6] += $currentGroup;
 	$fishGroups[8] = $currentGroup;
 }
 
-printf("Total number of fish is %d .\n", array_sum($fishGroups));
+printf("Total number of fish on day 80 is %d .\n", array_sum($fishGroups));
 
+for ($i = 80; $i < 256; ++$i) {
+	$currentGroup = array_shift($fishGroups);
+	//echo "$currentGroup\n";
+	$fishGroups[6] += $currentGroup;
+	$fishGroups[8] = $currentGroup;
+}
+
+printf("Total number of fish on day 80 is %d .\n", array_sum($fishGroups));
