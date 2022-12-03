@@ -23,3 +23,20 @@ foreach ($inputLoader as $line) {
 }
 
 echo "Sum of priorities: $sumOfPriorities .\n";
+
+$sumOfPriorities = 0;
+
+foreach ($inputLoader as $i => $line) {
+    if ($i % 3 === 0) {
+        $commons = str_split($line);
+    } else {
+        $commons = array_intersect($commons, str_split($line));
+        if ($i % 3 === 2) {
+            $groupBadge = current($commons);
+            $priority = $priorities[$groupBadge];
+            $sumOfPriorities += $priority;
+        }
+    }
+}
+
+echo "Sum of group priorities: $sumOfPriorities .\n";
