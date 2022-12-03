@@ -25,3 +25,23 @@ foreach ($inputLoader as $line) {
 }
 
 echo "Total score: $totalScore .\n";
+$totalScore = 0;
+$roundEnds = ['X' => 0, 'Y' => 3, 'Z' => 6];
+
+foreach ($inputLoader as $line) {
+	$opponent = $opponentSigns[$line[0]];
+    $roundEnd = $roundEnds[$line[2]];
+    $desiredDelta = $roundEnd / 3 - 1;
+    $me = $opponent + $desiredDelta;
+    if ($me === 4) {
+        $me = 1;
+    } else if ($me === 0) {
+        $me = 3;
+    }
+    $score = $me + $roundEnd;
+    $totalScore += $score;
+
+    //\adventOfCode\lib\Dumper::dump([$line[0] => $opponent, $line[2] => $roundEnd, 'desiredDelta' => $desiredDelta, 'me' => $me, 'score' => $score]);
+}
+
+echo "Total score: $totalScore .\n";
