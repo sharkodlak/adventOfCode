@@ -122,12 +122,20 @@ foreach ($inputLoader as $line) {
 $fsIterator = new FsDepthFirstIterator($directoryTree);
 $sumOfRightDirectories = 0;
 const DIRECTORY_SIZE = 100_000;
+const FILESYSTEM_SIZE = 70_000_000;
+const REQUIRED_FREE_SPACE = 30_000_000;
+$spaceToDelete = REQUIRED_FREE_SPACE - FILESYSTEM_SIZE + $directoryTree->getSize();
+$direcotrySizeToDelete = REQUIRED_FREE_SPACE;
 
 foreach ($fsIterator as $node) {
 	if ($node instanceof FsDirectory && $node->getSize() < DIRECTORY_SIZE) {
 		$sumOfRightDirectories += $node->getSize();
 	}
+	if ($node instanceof FsDirectory && $node->getSize() >= $spaceToDelete && $node->getSize() < $direcotrySizeToDelete) {
+		$direcotrySizeToDelete = $node->getSize();
+	}
 	//\adventOfCode\lib\Dumper::dump([$node->getName() => $node->getSize()]);
 }
 
 printf("Total small directories size: %d .\n", $sumOfRightDirectories);
+printf("Directory size to delete: %d .\n", $direcotrySizeToDelete);
