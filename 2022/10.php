@@ -18,10 +18,14 @@ $sumOfSignalStrengths = 0;
 foreach ($inputLoader as $y => $line) {
 	$instruction = substr($line, 0, 4);
 	for ($c = 1; $c <= $instructions[$instruction]['cycles']; ++$c) {
+		echo abs($registerX - $clock % 40) <= 1 ? '#' : ' ';
 		$clock++;
 		if (in_array($clock, $watchedClocks)) {
 			//\adventOfCode\lib\Dumper::dump([$clock => $registerX]);
 			$sumOfSignalStrengths += $clock * $registerX;
+		}
+		if ($clock % 40 === 0) {
+			echo "\n";
 		}
 		if ($c === $instructions[$instruction]['cycles']) {
 			switch ($instruction) {
