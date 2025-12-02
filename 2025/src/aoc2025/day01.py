@@ -31,10 +31,17 @@ def part_one(data: Iterable[int]) -> int:
 	return count
 
 def part_two(data: Iterable[int]) -> int:
-	values = list(data)
-	if not values:
-		return 0
-	return max(values) - min(values)
+	"""Count how many times dial clicks on 0."""
+	position = 50
+	count = 0
+	for step in data:
+		last_position = position
+		position += step
+		count += abs(position) // 100
+		if last_position != 0 and position <= 0:
+			count += 1
+		position %= 100
+	return count
 
 
 if __name__ == "__main__":  # pragma: no cover
