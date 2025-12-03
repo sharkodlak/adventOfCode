@@ -13,7 +13,7 @@ def test_sample_expected_distance():
 	data = day02.parse_input(SAMPLE)
 	assert day02.part_one(data) == 1227775554
 
-@pytest.mark.skip(reason="Not implemented yet")
+#@pytest.mark.skip(reason="Not implemented yet")
 def test_sample_clicks_on_zero():
 	data = day02.parse_input(SAMPLE)
-	assert day02.part_two(data) == 6
+	assert day02.part_two(data) == 4174379265
