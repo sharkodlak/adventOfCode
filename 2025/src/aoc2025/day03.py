@@ -1,6 +1,6 @@
 from __future__ import annotations
-
-from typing import Iterable, List
+from functools import reduce
+from typing import Iterable, List, Sequence
 
 
 def parse_input(raw_text: str) -> List[List[int]]:
@@ -14,23 +14,33 @@ def parse_input(raw_text: str) -> List[List[int]]:
 
 def part_one(banks: Iterable[List[int]]) -> int:
 	"""Find highest joltage batteries."""
-	joltage = 0
-	for bank in banks:
-		tens = 0
-		ones = 0
-		for i, jolt in enumerate(bank):
-			if jolt > tens and i < len(bank) - 1:
-				tens = jolt
-				ones = 0
-			elif tens > 0 and jolt > ones:
-				ones = jolt
-		joltage += tens * 10 + ones
-	return joltage
+	positions = range(2)
+	return common(banks, positions)
 
 def part_two(banks: Iterable[List[int]]) -> int:
-	"""Crawl through all ranges and sum invalid IDs."""
-	
-	return 0
+	"""Find highest joltage batteries."""
+	positions = range(12)
+	return common(banks, positions)
+
+def common(banks: Iterable[List[int]], positions: Sequence[int]) -> int:
+	"""Find highest joltage batteries."""
+	total_joltage = 0
+	for bank in banks:
+		joltages = [0] * len(positions)
+		for i, jolt in enumerate(bank):
+			found_higher = False
+			for position in positions:
+				if found_higher:
+					joltages[position] = 0
+					continue
+				digit = joltages[position]
+				bank_position = i + len(positions) - position - 1
+				if bank_position < len(bank) and digit < jolt:
+					joltages[position] = jolt
+					found_higher = True
+		joltage = reduce(lambda acc, j: acc * 10 + j, joltages, 0)
+		total_joltage += joltage
+	return total_joltage
 
 
 if __name__ == "__main__":  # pragma: no cover

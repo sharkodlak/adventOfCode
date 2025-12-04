@@ -13,7 +13,7 @@ def test_sample():
 	data = day03.parse_input(SAMPLE)
 	assert day03.part_one(data) == 357
 
-@pytest.mark.skip(reason="Not implemented yet")
+#@pytest.mark.skip(reason="Not implemented yet")
 def test_sample_part_two():
 	data = day03.parse_input(SAMPLE)
-	assert day03.part_two(data) == 0
+	assert day03.part_two(data) == 3121910778619
