@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import inspect
 from pathlib import Path
 from typing import Any, Iterable, List, Sequence, Tuple
 
@@ -32,6 +33,12 @@ def run_part(module: Any, part: int, data: Any) -> Any:
     if not hasattr(module, func_name):
         raise SystemExit(f"{module.__name__} is missing {func_name}()")
     part_func = getattr(module, func_name)
+
+    # Allow day modules to declare multiple positional params (e.g., part_one(a, b))
+    sig = inspect.signature(part_func)
+    positional_params = [p for p in sig.parameters.values() if p.kind in {p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD}]
+    if len(positional_params) > 1 and isinstance(data, (tuple, list)):
+        return part_func(*data)
     return part_func(data)
 
 
